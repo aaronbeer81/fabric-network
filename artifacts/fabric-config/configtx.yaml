@@ -1,0 +1,174 @@
+# For explanation of the config: https://github.com/hyperledger/fabric/blob/v2.2.1/sampleconfig/configtx.yaml
+
+Organizations:
+  - &OrdererOrg
+    Name: OrdererOrg
+    SkipAsForeign: false
+    ID: OrdererOrgMSP
+    MSPDir: ../crypto-config/ca-orderer/ordererOrganizations/orderer/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('OrdererOrgMSP.member')"
+      Writers:
+        Type: Signature
+        Rule: "OR('OrdererOrgMSP.member')"
+      Admins:
+        Type: Signature
+        Rule: "OR('OrdererOrgMSP.admin')"
+      Endorsement:
+        Type: Signature
+        Rule: "OR('OrdererOrgMSP.member')"
+    OrdererEndpoints:
+      - "orderer1-orderer:7121"
+      - "orderer2-orderer:7122"
+      - "orderer3-orderer:7123"
+  - &PeerOrg
+    Name: PeerOrg
+    ID: PeerOrgMSP
+    MSPDir: ../crypto-config/ca-peer/peerOrganizations/peer/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('PeerOrgMSP.admin', 'PeerOrgMSP.peer', 'PeerOrgMSP.client')"
+      Writers:
+        Type: Signature
+        Rule: "OR('PeerOrgMSP.admin', 'PeerOrgMSP.client')"
+      Admins:
+        Type: Signature
+        Rule: "OR('PeerOrgMSP.admin')"
+      Endorsement:
+        Type: Signature
+        Rule: "OR('PeerOrgMSP.peer')"
+    AnchorPeers:
+      - Host: peer1-peer
+        Port: 7101
+      - Host: peer2-peer
+        Port: 7102
+Capabilities:
+  Channel: &ChannelCapabilities
+    V2_0: true
+  Orderer: &OrdererCapabilities
+    V2_0: true
+  Application: &ApplicationCapabilities
+    V2_0: true
+Application: &ApplicationDefaults
+  ACLs: &ACLsDefault
+    _lifecycle/CheckCommitReadiness: /Channel/Application/Writers
+    _lifecycle/CommitChaincodeDefinition: /Channel/Application/Writers
+    _lifecycle/QueryChaincodeDefinition: /Channel/Application/Readers
+    _lifecycle/QueryChaincodeDefinitions: /Channel/Application/Readers
+    lscc/ChaincodeExists: /Channel/Application/Readers
+    lscc/GetDeploymentSpec: /Channel/Application/Readers
+    lscc/GetChaincodeData: /Channel/Application/Readers
+    lscc/GetInstantiatedChaincodes: /Channel/Application/Readers
+    qscc/GetChainInfo: /Channel/Application/Readers
+    qscc/GetBlockByNumber: /Channel/Application/Readers
+    qscc/GetBlockByHash: /Channel/Application/Readers
+    qscc/GetTransactionByID: /Channel/Application/Readers
+    qscc/GetBlockByTxID: /Channel/Application/Readers
+    cscc/GetConfigBlock: /Channel/Application/Readers
+    cscc/GetConfigTree: /Channel/Application/Readers
+    cscc/SimulateConfigTreeUpdate: /Channel/Application/Readers
+    peer/Propose: /Channel/Application/Writers
+    peer/ChaincodeToChaincode: /Channel/Application/Readers
+    event/Block: /Channel/Application/Readers
+    event/FilteredBlock: /Channel/Application/Readers
+  Organizations:
+  Policies: &ApplicationDefaultPolicies
+    LifecycleEndorsement:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Endorsement"
+    Endorsement:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Endorsement"
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+  Capabilities:
+    <<: *ApplicationCapabilities
+Orderer: &OrdererDefaults
+  OrdererType: etcdraft
+  Addresses:
+    - "orderer1-orderer:7121"
+    - "orderer2-orderer:7122"
+    - "orderer3-orderer:7123"
+  BatchTimeout: 2s
+  BatchSize:
+    MaxMessageCount: 500
+    AbsoluteMaxBytes: 98 MB
+    PreferredMaxBytes: 2 MB
+  MaxChannels: 0
+  EtcdRaft:
+    Consenters:
+      - Host: orderer1-orderer
+        Port: 7121
+        ClientTLSCert: ../crypto-config/ca-orderer/ordererOrganizations/orderer/orderers/orderer1-orderer/tls/signcerts/cert.pem
+        ServerTLSCert: ../crypto-config/ca-orderer/ordererOrganizations/orderer/orderers/orderer1-orderer/tls/signcerts/cert.pem
+      - Host: orderer2-orderer
+        Port: 7122
+        ClientTLSCert: ../crypto-config/ca-orderer/ordererOrganizations/orderer/orderers/orderer2-orderer/tls/signcerts/cert.pem
+        ServerTLSCert: ../crypto-config/ca-orderer/ordererOrganizations/orderer/orderers/orderer2-orderer/tls/signcerts/cert.pem
+      - Host: orderer3-orderer
+        Port: 7123
+        ClientTLSCert: ../crypto-config/ca-orderer/ordererOrganizations/orderer/orderers/orderer3-orderer/tls/signcerts/cert.pem
+        ServerTLSCert: ../crypto-config/ca-orderer/ordererOrganizations/orderer/orderers/orderer3-orderer/tls/signcerts/cert.pem
+    Options:
+      TickInterval: 500ms
+      ElectionTick: 10
+      HeartbeatTick: 1
+      MaxInflightBlocks: 5
+      SnapshotIntervalSize: 98 MB
+  Organizations:
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+    BlockValidation:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+  Capabilities:
+    <<: *OrdererCapabilities
+Channel: &ChannelDefaults
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+  Capabilities:
+    <<: *ChannelCapabilities
+Profiles:
+  Genesis:
+    <<: *ChannelDefaults
+    Orderer:
+      <<: *OrdererDefaults
+      Organizations:
+        - *OrdererOrg
+    Consortiums:
+      Local:
+        Organizations:
+          - *PeerOrg
+  LocalApplicationChannel:
+    <<: *ChannelDefaults
+    Consortium: Local
+    Application:
+      <<: *ApplicationDefaults
+      Organizations:
+        - *PeerOrg

@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ca-root
+spec:
+  selector:
+    app.kubernetes.io/name: ca-root
+  ports:
+    - name: api
+      port: 7131
+      targetPort: 7131
+      protocol: TCP

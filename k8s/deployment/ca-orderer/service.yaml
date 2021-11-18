@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ca-orderer
+spec:
+  selector:
+    app.kubernetes.io/name: ca-orderer
+  ports:
+    - name: api
+      port: 7131
+      targetPort: 7131
+      protocol: TCP

@@ -1,0 +1,106 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/name: orderer2-orderer
+  name: orderer2-orderer
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: orderer2-orderer
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: orderer
+        app.kubernetes.io/part-of: fabric
+        app.kubernetes.io/name: orderer2-orderer
+      annotations:
+        collectord.io/output: "splunk"
+        collectord.io/logs-index: "distledgitd"
+        prometheus.io/path: "/metrics"
+        prometheus.io/port: "8443"
+        prometheus.io/scheme: "http"
+        prometheus.io/scrape: "true"
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: "app.kubernetes.io/component"
+                      operator: In
+                      values:
+                        - orderer
+                topologyKey: "kubernetes.io/hostname"
+      containers:
+        - name: orderer
+          image: [CENSORED]
+          workingDir: /opt/gopath/src/github.com/hyperledger/fabric/orderer
+          env:
+            - name: TZ
+              value: Europe/Amsterdam
+            - name: FABRIC_LOGGING_SPEC
+              value: INFO
+            - name: ORDERER_GENERAL_LOCALMSPID
+              value: OrdererOrgMSP
+            - name: ORDERER_GENERAL_LOCALMSPDIR
+              value: /etc/hyperledger/crypto/orderer/msp
+            - name: ORDERER_GENERAL_TLS_PRIVATEKEY
+              value: /etc/hyperledger/crypto/orderer/tls/keystore/priv_sk
+            - name: ORDERER_GENERAL_TLS_CERTIFICATE
+              value: /etc/hyperledger/crypto/orderer/tls/signcerts/cert.pem
+            - name: ORDERER_GENERAL_TLS_CLIENTROOTCAS
+              value: /etc/hyperledger/crypto/orderer/tls/tlscacerts/tlsca-orderer.pem
+            - name: ORDERER_GENERAL_TLS_ROOTCAS
+              value: "[/etc/hyperledger/crypto/orderer/tls/tlscacerts/tlsca-orderer.pem]"
+            - name: ORDERER_GENERAL_CLUSTER_CLIENTPRIVATEKEY
+              value: /etc/hyperledger/crypto/orderer/tls/keystore/priv_sk
+            - name: ORDERER_GENERAL_CLUSTER_CLIENTCERTIFICATE
+              value: /etc/hyperledger/crypto/orderer/tls/signcerts/cert.pem
+            - name: ORDERER_GENERAL_CLUSTER_ROOTCAS
+              value: "[/etc/hyperledger/crypto/orderer/tls/tlscacerts/tlsca-orderer.pem]"
+            - name: ORDERER_GENERAL_GENESISMETHOD
+              value: file
+            - name: ORDERER_GENERAL_GENESISFILE
+              value: /etc/hyperledger/configtx/genesis.block
+            - name: ORDERER_GENERAL_LISTENADDRESS
+              value: 0.0.0.0
+            - name: ORDERER_GENERAL_TLS_ENABLED
+              value: "true"
+            - name: ORDERER_METRICS_PROVIDER
+              value: "prometheus"
+            - name: ORDERER_OPERATIONS_LISTENADDRESS
+              value: "0.0.0.0:8443"
+            - name: ORDERER_OPERATIONS_TLS_ENABLED
+              value: "false"
+            - name: ORDERER_GENERAL_LISTENPORT
+              value: "7122"
+          volumeMounts:
+            - mountPath: /etc/hyperledger/configtx
+              subPath: orderers/genesis
+              name: fabric-config
+            - mountPath: /etc/hyperledger/crypto/orderer
+              subPath: ca-orderer/ordererOrganizations/orderer/orderers/orderer2-orderer
+              name: crypto-config
+          ports:
+            - containerPort: 8443
+            - containerPort: 7122
+          resources:
+            requests:
+              cpu: "0.1"
+              memory: "100Mi"
+            limits:
+              cpu: "0.1"
+              memory: "100Mi"
+      volumes:
+        - name: fabric-config
+          persistentVolumeClaim:
+            claimName: fabric-config
+        - name: crypto-config
+          persistentVolumeClaim:
+            claimName: crypto-config

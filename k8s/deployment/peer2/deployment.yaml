@@ -1,0 +1,153 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/name: peer2-peer
+  name: peer2-peer
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: peer2-peer
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: peer
+        app.kubernetes.io/part-of: fabric
+        app.kubernetes.io/name: peer2-peer
+      annotations:
+        collectord.io/output: "splunk"
+        collectord.io/logs-index: "distledgitd"
+        prometheus.io/path: "/metrics"
+        prometheus.io/port: "9443"
+        prometheus.io/scheme: "http"
+        prometheus.io/scrape: "true"
+    spec:
+      serviceAccountName: peer
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: "app.kubernetes.io/component"
+                      operator: In
+                      values:
+                        - peer
+                topologyKey: "kubernetes.io/hostname"
+      containers:
+        - name: peer
+          image: [CENSORED]
+          workingDir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+          env:
+            - name: K8SCC_CFGFILE
+              value: "/opt/k8scc/k8scc.yaml"
+            - name: TZ
+              value: Europe/Amsterdam
+            - name: CORE_VM_DOCKER_ATTACHSTDOUT
+              value: "true"
+            - name: FABRIC_LOGGING_SPEC
+              value: INFO
+            - name: CORE_PEER_LOCALMSPID
+              value: PeerOrgMSP
+            - name: CORE_PEER_MSPCONFIGPATH
+              value: /etc/hyperledger/crypto/peer/msp
+            - name: CORE_PEER_TLS_KEY_FILE
+              value: /etc/hyperledger/crypto/peer/tls/keystore/priv_sk
+            - name: CORE_PEER_TLS_CERT_FILE
+              value: /etc/hyperledger/crypto/peer/tls/signcerts/cert.pem
+            - name: CORE_PEER_TLS_ROOTCERT_FILE
+              value: /etc/hyperledger/crypto/peer/tls/tlscacerts/tlsca-peer.pem
+            - name: CORE_PEER_TLS_CLIENTROOTCAS_FILES
+              value: /etc/hyperledger/crypto/peer/tls/tlscacerts/tlsca-peer.pem
+            - name: CORE_PEER_GOSSIP_ORGLEADER
+              value: "true"
+            - name: CORE_PEER_GOSSIP_USELEADERELECTION
+              value: "false"
+            - name: CORE_PEER_GOSSIP_STATE_ENABLED
+              value: "false"
+            - name: CORE_PEER_PROFILE_ENABLED
+              value: "true"
+            - name: CORE_PEER_TLS_ENABLED
+              value: "true"
+            - name: CORE_PEER_TLS_CLIENTAUTHREQUIRED
+              value: "true"
+            - name: CORE_PEER_CHAINCODELISTENADDRESS
+              value: 0.0.0.0:7052
+            - name: CORE_LEDGER_STATE_STATEDATABASE
+              value: CouchDB
+            - name: CORE_METRICS_PROVIDER
+              value: "prometheus"
+            - name: CORE_OPERATIONS_LISTENADDRESS
+              value: "0.0.0.0:9443"
+            - name: CORE_OPERATIONS_TLS_ENABLED
+              value: "false"
+            - name: CORE_PEER_ID
+              value: peer2-peer
+            - name: CORE_PEER_GOSSIP_BOOTSTRAP
+              value: peer1-peer:7101
+            - name: CORE_PEER_GOSSIP_EXTERNALENDPOINT
+              value: peer2-peer:7102
+            - name: CORE_PEER_ADDRESS
+              value: peer2-peer:7102
+            - name: CORE_PEER_CHAINCODEADDRESS
+              value: peer2-peer:7052
+            - name: CORE_PEER_LISTENADDRESS
+              value: 0.0.0.0:7102
+            - name: CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS
+              value: localhost:5984
+            - name: CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME
+              value: couchdb-local-peer2
+            - name: CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD
+              value: password
+          volumeMounts:
+            - mountPath: /var/lib/k8scc/transfer/
+              name: k8scc-transfer-pv
+            - mountPath: /opt/k8scc/k8scc.yaml
+              subPath: peers/base/k8scc.yaml
+              name: fabric-config
+            - mountPath: /etc/hyperledger/crypto/peer
+              subPath: ca-peer/peerOrganizations/peer/peers/peer2-peer
+              name: crypto-config
+          ports:
+            - containerPort: 7052
+            - containerPort: 7102
+            - containerPort: 9443
+          resources:
+            requests:
+              cpu: "0.5"
+              memory: "512Mi"
+            limits:
+              cpu: "1"
+              memory: "1024Mi"
+        - name: couchdb
+          image: couchdb:3.1.1
+          env:
+            - name: TZ
+              value: Europe/Amsterdam
+            - name: COUCHDB_USER
+              value: couchdb-local-peer2
+            - name: COUCHDB_PASSWORD
+              value: password
+          ports:
+            - containerPort: 5984
+          resources:
+            requests:
+              cpu: "0.2"
+              memory: "256Mi"
+            limits:
+              cpu: "0.5"
+              memory: "512Mi"
+      volumes:
+        - name: k8scc-transfer-pv
+          persistentVolumeClaim:
+            claimName: k8scc-transfer-pv
+        - name: fabric-config
+          persistentVolumeClaim:
+            claimName: fabric-config
+        - name: crypto-config
+          persistentVolumeClaim:
+            claimName: crypto-config

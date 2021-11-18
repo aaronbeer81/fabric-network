@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: peer1-peer
+spec:
+  selector:
+    app.kubernetes.io/name: peer1-peer
+  ports:
+    - name: chaincode
+      port: 7052
+      protocol: TCP
+      targetPort: 7052
+    - name: peer-listenport
+      port: 7101
+      protocol: TCP
+      targetPort: 7101

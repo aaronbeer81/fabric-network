@@ -1,0 +1,108 @@
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: fabric-config
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: nfs
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: k8scc-transfer-pv
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: nfs
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: postgres-ca-peer
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: nfs
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: postgres-ca-orderer
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: nfs
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: postgres-ca-root
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: nfs
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: postgres-ca-intermediate
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: nfs
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: postgres-tlsca-orderer
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: nfs
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: postgres-tlsca-peer
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: nfs
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: crypto-config
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: nfs

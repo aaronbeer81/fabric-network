@@ -1,0 +1,95 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/name: ca-tlspeer
+  name: ca-tlspeer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: ca-tlspeer
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: ca
+        app.kubernetes.io/part-of: fabric
+        app.kubernetes.io/name: ca-tlspeer
+      annotations:
+        collectord.io/output: "splunk"
+        collectord.io/logs-index: "distledgitd"
+        prometheus.io/path: "/metrics"
+        prometheus.io/port: "9443"
+        prometheus.io/scheme: "http"
+        prometheus.io/scrape: "true"
+    spec:
+      containers:
+        - name: ca
+          image: [CENSORED]
+          workingDir: /etc/hyperledger/fabric-ca-server
+          command: [ "/bin/sh","-c" ]
+          args: [ '
+            rm /etc/hyperledger/fabric-ca-server/ca-cert.pem;
+            rm /etc/hyperledger/fabric-ca-server/ca-key.pem;
+            fabric-ca-server start -u https://tlscapeeradmin-ca-intermediate:password@ca-intermediate:7131 --intermediate.tls.certfiles /etc/hyperledger/fabric-ca-server/ca-intermediate/tls-cert.pem --db.datasource "host=localhost port=5432 user=postgres password=password dbname=fabric_ca sslmode=disable";
+          ' ]
+          env:
+            - name: TZ
+              value: Europe/Amsterdam
+            - name: FABRIC_LOGGING_SPEC
+              value: INFO
+            - name: FABRIC_CA_SERVER_HOME
+              value: /etc/hyperledger/fabric-ca-server
+            - name: FABRIC_CA_SERVER_METRICS_PROVIDER
+              value: "prometheus"
+            - name: FABRIC_CA_SERVER_TLS_ENABLED
+              value: "true"
+            - name: FABRIC_CA_SERVER_OPERATIONS_LISTENADDRESS
+              value: 127.0.0.1:9444
+            - name: FABRIC_CA_SERVER_CA_NAME
+              value: ca-tlspeer
+            - name: FABRIC_CA_SERVER_CSR_HOSTS
+              value: "0.0.0.0,ca-tlspeer"
+          ports:
+            - containerPort: 7131
+          volumeMounts:
+            - mountPath: /etc/hyperledger/fabric-ca-server/fabric-ca-server-config.yaml
+              subPath: ca-bases/ca-tlspeer-base/fabric-ca-server-config.yaml
+              name: fabric-config
+            - mountPath: /etc/hyperledger/fabric-ca-server/ca-intermediate/tls-cert.pem
+              subPath: ca-intermediate/tls-cert.pem
+              name: crypto-config
+        - name: postgres
+          image: [CENSORED]
+          env:
+            - name: TZ
+              value: Europe/Amsterdam
+            - name: POSTGRES_DB
+              value: fabric_ca
+            - name: POSTGRES_USER
+              value: postgres
+            - name: POSTGRES_PASSWORD
+              value: password
+          ports:
+            - containerPort: 5432
+            - containerPort: 9443
+          volumeMounts:
+            - mountPath: /var/lib/postgresql
+              name: data-postgres-tlsca-peer
+          resources:
+            requests:
+              cpu: "0.1"
+              memory: "128Mi"
+            limits:
+              cpu: "0.3"
+              memory: "384Mi"
+      volumes:
+        - name: fabric-config
+          persistentVolumeClaim:
+            claimName: fabric-config
+        - name: crypto-config
+          persistentVolumeClaim:
+            claimName: crypto-config
+        - name: data-postgres-tlsca-peer
+          persistentVolumeClaim:
+            claimName: postgres-tlsca-peer

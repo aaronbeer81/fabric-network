@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/name: cli-peer
+  name: cli-peer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cli-peer
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cli-peer
+        app.kubernetes.io/component: cli
+        app.kubernetes.io/part-of: fabric
+      annotations:
+        collectord.io/output: "splunk"
+        collectord.io/logs-index: "distledgitd"
+    spec:
+      containers:
+        - name: cli
+          image: [CENSORED]
+          workingDir: /etc/hyperledger/fabric
+          tty: true
+          stdin: true
+          env:
+            - name: TZ
+              value: Europe/Amsterdam
+            - name: FABRIC_LOGGING_SPEC
+              value: INFO
+            - name: GOPATH
+              value: /opt/gopath
+            - name: CORE_PEER_ID
+              value: cli-peer
+            - name: CORE_PEER_ADDRESS
+              value: peer1-peer:7101
+            - name: CORE_PEER_LOCALMSPID
+              value: PeerOrgMSP
+            - name: CORE_PEER_TLS_ENABLED
+              value: "true"
+            - name: CORE_PEER_TLS_CLIENTAUTHREQUIRED
+              value: "true"
+          volumeMounts:
+            - mountPath: /etc/hyperledger/fabric
+              name: crypto-config
+          imagePullPolicy: Always
+          resources:
+            requests:
+              cpu: "0.1"
+              memory: "100Mi"
+            limits:
+              cpu: "0.1"
+              memory: "100Mi"
+      volumes:
+        - name: crypto-config
+          persistentVolumeClaim:
+            claimName: crypto-config

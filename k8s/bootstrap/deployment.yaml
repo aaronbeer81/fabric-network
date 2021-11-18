@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/name: fabric-inspector
+  name: fabric-inspector
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: fabric-inspector
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: fabric-inspector
+    spec:
+      containers:
+        - name: fabric-inspector
+          image: [CENSORED]
+          tty: true
+          stdin: true
+          volumeMounts:
+            - mountPath: /fabric-config
+              name: fabric-config
+            - mountPath: /crypto-config
+              name: crypto-config
+            - mountPath: /postgres/tlsca-peer
+              name: data-postgres-tlsca-peer
+            - mountPath: /postgres/tlsca-orderer
+              name: data-postgres-tlsca-orderer
+            - mountPath: /postgres/ca-peer
+              name: data-postgres-ca-peer
+            - mountPath: /postgres/ca-orderer
+              name: data-postgres-ca-orderer
+            - mountPath: /postgres/ca-root
+              name: data-postgres-ca-root
+            - mountPath: /postgres/ca-intermediate
+              name: data-postgres-ca-intermediate
+          resources:
+            requests:
+              cpu: "0.1"
+              memory: "64Mi"
+            limits:
+              cpu: "0.2"
+              memory: "128Mi"
+      volumes:
+        - name: fabric-config
+          persistentVolumeClaim:
+            claimName: fabric-config
+        - name: crypto-config
+          persistentVolumeClaim:
+            claimName: crypto-config
+        - name: data-postgres-tlsca-peer
+          persistentVolumeClaim:
+            claimName: postgres-tlsca-peer
+        - name: data-postgres-tlsca-orderer
+          persistentVolumeClaim:
+            claimName: postgres-tlsca-orderer
+        - name: data-postgres-ca-peer
+          persistentVolumeClaim:
+            claimName: postgres-ca-peer
+        - name: data-postgres-ca-orderer
+          persistentVolumeClaim:
+            claimName: postgres-ca-orderer
+        - name: data-postgres-ca-root
+          persistentVolumeClaim:
+            claimName: postgres-ca-root
+        - name: data-postgres-ca-intermediate
+          persistentVolumeClaim:
+            claimName: postgres-ca-intermediate
