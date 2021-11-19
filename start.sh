@@ -214,17 +214,18 @@ cp ./artifacts/static-block/ca-orderer/config.yaml $LOCAL_CRYPTO_HOME$ORDERER_SU
 cp ./artifacts/static-block/ca-orderer/config.yaml $LOCAL_CRYPTO_HOME$ORDERER_SUBDIRECTORY/orderers/orderer1-orderer/msp/config.yaml
 cp ./artifacts/static-block/ca-orderer/config.yaml $LOCAL_CRYPTO_HOME$ORDERER_SUBDIRECTORY/orderers/orderer2-orderer/msp/config.yaml
 cp ./artifacts/static-block/ca-orderer/config.yaml $LOCAL_CRYPTO_HOME$ORDERER_SUBDIRECTORY/orderers/orderer3-orderer/msp/config.yaml
-cp ./artifacts/static-block/ca-orderer/config.yaml $LOCAL_CRYPTO_HOME$ORDERER_SUBDIRECTORY/ca-orderer-admin/msp/config.yaml
+cp ./artifacts/static-block/ca-orderer/config.yaml $LOCAL_CRYPTO_HOME$ORDERER_SUBDIRECTORY/registrar-ca-orderer/msp/config.yaml
 
 cp ./artifacts/static-block/ca-peer/config.yaml $LOCAL_CRYPTO_HOME$PEER_SUBDIRECTORY/msp/config.yaml
 cp ./artifacts/static-block/ca-peer/config.yaml $LOCAL_CRYPTO_HOME$PEER_SUBDIRECTORY/peers/peer1-peer/msp/config.yaml
 cp ./artifacts/static-block/ca-peer/config.yaml $LOCAL_CRYPTO_HOME$PEER_SUBDIRECTORY/peers/peer2-peer/msp/config.yaml
-cp ./artifacts/static-block/ca-peer/config.yaml $LOCAL_CRYPTO_HOME$PEER_SUBDIRECTORY/ca-peer-admin/msp/config.yaml
+cp ./artifacts/static-block/ca-peer/config.yaml $LOCAL_CRYPTO_HOME$PEER_SUBDIRECTORY/registrar-ca-peer/msp/config.yaml
 
 configtxgen -outputBlock ./artifacts/fabric-config/orderers/genesis/genesis.block -profile Genesis -channelID system-channel -configPath ./artifacts/fabric-config
 
-echo "---- PUT CRYPTO MATERIAL BACK ON CRYPTO-CONFIG PVC ----"
+echo "---- PUT MATERIAL ON PVC ----"
 kubectl cp $LOCAL_CRYPTO_HOME $(kubectl get pod -l app.kubernetes.io/name=fabric-inspector -o jsonpath="{.items[0].metadata.name}"):/
+kubectl cp ./artifacts/fabric-config $(kubectl get pod -l app.kubernetes.io/name=fabric-inspector -o jsonpath="{.items[0].metadata.name}"):/
 
 echo "---- START PEERS AND ORDERERS ----"
 kubectl apply -f k8s/deployment/peer1 -f k8s/deployment/peer2 -f k8s/deployment/orderer1 -f k8s/deployment/orderer2 -f k8s/deployment/orderer3
