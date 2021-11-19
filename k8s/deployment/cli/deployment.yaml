@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
         - name: cli
-          image: [CENSORED]
+          image: hyperledger/fabric-ca-tools:latest
           workingDir: /etc/hyperledger/fabric
           tty: true
           stdin: true

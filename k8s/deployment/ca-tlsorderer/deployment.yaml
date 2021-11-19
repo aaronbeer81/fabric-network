@@ -25,7 +25,7 @@ spec:
     spec:
       containers:
         - name: ca
-          image: [CENSORED]
+          image: hyperledger/fabric-ca:1.4.9
           workingDir: /etc/hyperledger/fabric-ca-server
           command: [ "/bin/sh","-c" ]
           args: [ '
@@ -60,7 +60,7 @@ spec:
               subPath: ca-intermediate/tls-cert.pem
               name: crypto-config
         - name: postgres
-          image: [CENSORED]
+          image: postgres:10.16-alpine
           env:
             - name: TZ
               value: Europe/Amsterdam

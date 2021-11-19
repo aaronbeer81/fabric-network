@@ -1,8 +1,8 @@
 ---
 images:
-  golang: "[CENSORED]"
-  java: "[CENSORED]"
-  node: "[CENSORED]"
+  golang: "hyperledger/fabric-ccenv:2.2.1"
+  java: "hyperledger/fabric-javaenv:2.2.1"
+  node: "hyperledger/fabric-nodeenv:2.2.1"
 transfer_volume:
   path: "/var/lib/k8scc/transfer/"
   claim: "k8scc-transfer-pv"

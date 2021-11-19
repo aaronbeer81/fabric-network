@@ -40,7 +40,7 @@ spec:
                 topologyKey: "kubernetes.io/hostname"
       containers:
         - name: peer
-          image: [CENSORED]
+          image: ghcr.io/aaronbeer81/hlfabric-k8scc:master
           workingDir: /opt/gopath/src/github.com/hyperledger/fabric/peer
           env:
             - name: K8SCC_CFGFILE

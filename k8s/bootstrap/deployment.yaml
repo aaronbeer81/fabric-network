@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: fabric-inspector
-          image: [CENSORED]
+          image: alpine
           tty: true
           stdin: true
           volumeMounts:
